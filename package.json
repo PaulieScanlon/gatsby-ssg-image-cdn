@@ -1,0 +1,33 @@
+{
+  "name": "gatsby-ssg-image-cdn",
+  "version": "1.0.0",
+  "description": "A demo repo for using Sharp in a Serverless Function for us in a Gatsby SSR page.",
+  "main": "index.js",
+  "scripts": {
+    "develop": "gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaulieScanlon/gatsby-ssg-image-cdn.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PaulieScanlon/gatsby-ssg-image-cdn/issues"
+  },
+  "homepage": "https://github.com/PaulieScanlon/gatsby-ssg-image-cdn#readme",
+  "dependencies": {
+    "false": "^0.0.4",
+    "gatsby": "^4.9.3",
+    "gatsby-plugin-image": "^2.9.1",
+    "gatsby-plugin-utils": "^3.4.0-next.3",
+    "probe-image-size": "^7.2.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  }
+}
