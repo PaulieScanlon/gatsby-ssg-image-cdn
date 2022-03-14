@@ -12,10 +12,25 @@ exports.onCreateDevServer = ({ app }) => {
 
 const RAW_GITHUB_URL = 'https://raw.githubusercontent.com/PaulieScanlon/gatsby-ssg-image-cdn/main/blog/';
 
-exports.onCreateNode = async ({ node, actions: { createNode }, createNodeId, createContentDigest }) => {
+exports.createSchemaCustomization = ({ actions: { createTypes, printTypeDefinitions } }) => {
+  createTypes(`
+    type MarkdownRemark implements Node {
+      gatsbyImage: gatsbyImage @link(from: "fields.gatsbyImage")
+    }
+  `);
+
+  // printTypeDefinitions({ path: './typeDefs.txt' });
+};
+
+exports.onCreateNode = async ({
+  node,
+  actions,
+  actions: { createNode, createNodeField },
+  createNodeId,
+  createContentDigest
+}) => {
   if (node.internal.mediaType === 'text/markdown') {
     const grayMatter = await matter(node.internal.content);
-
     const image = await probe(`${RAW_GITHUB_URL}${node.relativeDirectory}/${grayMatter.data.image}`);
 
     const gatsbyImage = await gatsbyImageResolver(
@@ -24,20 +39,24 @@ exports.onCreateNode = async ({ node, actions: { createNode }, createNodeId, cre
         mimeType: image.mime,
         width: image.width,
         height: image.height,
-        filename: `${grayMatter.data.image}-image`
+        filename: `${grayMatter.data.image}-image`,
+        internal: {
+          contentDigest: createContentDigest(image)
+        }
       },
       {
         width: 400,
         layout: 'constrained',
         placeholder: 'none',
         quality: 10
-      }
+      },
+      actions
     );
 
-    createNode({
+    const gatsbyImageNode = createNode({
       ...gatsbyImage,
       id: createNodeId(`${grayMatter.data.image}-image`),
-      parent: null,
+      parent: node.id,
       children: [],
       internal: {
         type: 'gatsbyImage',
@@ -45,40 +64,7 @@ exports.onCreateNode = async ({ node, actions: { createNode }, createNodeId, cre
         contentDigest: createContentDigest(image)
       }
     });
+
+    createNodeField({ node, name: 'gatsbyImage', value: gatsbyImageNode.id });
   }
-};
-
-exports.createPages = async ({ graphql, actions: { createPage }, reporter }) => {
-  const { data } = await graphql(`
-    query {
-      allMarkdownRemark {
-        edges {
-          node {
-            id
-            frontmatter {
-              slug
-            }
-          }
-        }
-      }
-    }
-  `);
-
-  if (data.errors) {
-    reporter.panicOnBuild('🚨  ERROR: Loading "createPages" query');
-  }
-
-  data.allMarkdownRemark.edges.forEach(({ node }) => {
-    const {
-      id,
-      frontmatter: { slug }
-    } = node;
-
-    createPage({
-      id: id,
-      path: slug,
-      component: path.resolve(`./src/templates/blog-template.js`),
-      context: { id: id, slug: slug }
-    });
-  });
 };

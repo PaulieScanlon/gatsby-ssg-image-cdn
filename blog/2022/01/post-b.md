@@ -1,5 +1,4 @@
 ---
-slug: '/blog/2022/01/blog-post-b'
 date: '2022-01-01'
 title: 'Blog Post B'
 image: 'image-b.jpg'

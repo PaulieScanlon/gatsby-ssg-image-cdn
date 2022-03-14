@@ -1,6 +1,6 @@
 import React from 'react';
-import { graphql } from 'gatsby';
-import { GatsbyImage } from 'gatsby-plugin-image';
+import { graphql, Link } from 'gatsby';
+// import { GatsbyImage } from 'gatsby-plugin-image';
 
 const Page = ({
   data: {
@@ -15,10 +15,11 @@ const Page = ({
     }
   }
 }) => {
-  console.log(gatsbyImage);
+  console.log('gatsbyImage: ', gatsbyImage);
 
   return (
     <main>
+      <Link to="/">Back</Link>
       {/* <img src={publicURL} alt={title} /> */}
       {/* <GatsbyImage image={gatsbyImage} alt={title} /> */}
       <h1>{title}</h1>
@@ -41,6 +42,9 @@ export const pageQuery = graphql`
         image {
           publicURL
         }
+      }
+      gatsbyImage {
+        layout
       }
     }
   }

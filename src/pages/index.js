@@ -11,11 +11,12 @@ const Page = ({
       <ul>
         {nodes.map((node, index) => {
           const {
-            frontmatter: { slug, title }
+            frontmatter: { title },
+            gatsbyPath
           } = node;
           return (
             <li key={index}>
-              <Link to={slug}>{title}</Link>
+              <Link to={gatsbyPath}>{title}</Link>
             </li>
           );
         })}
@@ -30,8 +31,8 @@ export const query = graphql`
       nodes {
         frontmatter {
           title
-          slug
         }
+        gatsbyPath(filePath: "/blog/{MarkdownRemark.parent__(File)__name}")
       }
     }
   }
