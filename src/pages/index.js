@@ -1,15 +1,40 @@
 import React from 'react';
-// import { GatsbyImage } from 'gatsby-plugin-image';
+import { Link, graphql } from 'gatsby';
 
-const Page = ({ serverData: { date, explanation, title, url } }) => {
+const Page = ({
+  data: {
+    allMarkdownRemark: { nodes }
+  }
+}) => {
   return (
     <main>
-      <small>{new Date(date).toLocaleDateString()}</small>
-      <h1>{title}</h1>
-      <p>{explanation}</p>
-      {/* <GatsbyImage image={gatsbyImage} alt={title} backgroundColor="#242225" /> */}
+      <ul>
+        {nodes.map((node, index) => {
+          const {
+            frontmatter: { slug, title }
+          } = node;
+          return (
+            <li key={index}>
+              <Link to={slug}>{title}</Link>
+            </li>
+          );
+        })}
+      </ul>
     </main>
   );
 };
+
+export const query = graphql`
+  {
+    allMarkdownRemark {
+      nodes {
+        frontmatter {
+          title
+          slug
+        }
+      }
+    }
+  }
+`;
 
 export default Page;
