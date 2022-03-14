@@ -1,48 +1,52 @@
-const fetch = require('node-fetch');
-const path = require('path');
-const { createReadStream, readFileSync, readFile } = require('fs');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const matter = require('gray-matter');
+
 const probe = require('probe-image-size');
 const { gatsbyImageResolver } = require('gatsby-plugin-utils/dist/polyfill-remote-file/graphql/gatsby-image-resolver');
 
-// node-fetch @latest .cjs import
-// const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const { polyfillImageServiceDevRoutes } = require('gatsby-plugin-utils/polyfill-remote-file');
 
 exports.onCreateDevServer = ({ app }) => {
   polyfillImageServiceDevRoutes(app);
 };
 
-// exports.onCreateNode = async ({ node, createContentDigest }) => {
-//   if (node.internal.mediaType === 'text/markdown') {
-//     const grayMatter = await matter(node.internal.content);
-//     const src = `${node.dir}/${grayMatter.data.image}`;
-//     const image = await probe(createReadStream(src));
+const RAW_GITHUB_URL = 'https://raw.githubusercontent.com/PaulieScanlon/gatsby-ssg-image-cdn/main/blog/';
 
-//     // deploy this, use the raw the image url from github.
+exports.onCreateNode = async ({ node, actions: { createNode }, createNodeId, createContentDigest }) => {
+  if (node.internal.mediaType === 'text/markdown') {
+    const grayMatter = await matter(node.internal.content);
 
-//     const gatsbyImage = await gatsbyImageResolver(
-//       {
-//         url: src,
-//         mimeType: image.mime,
-//         width: image.width,
-//         height: image.height,
-//         filename: `${grayMatter.data.image}-image`,
-//         internal: {
-//           contentDigest: createContentDigest(src)
-//         }
-//       },
-//       {
-//         width: 400,
-//         layout: 'constrained',
-//         placeholder: 'none',
-//         quality: 10
-//       }
-//     );
+    const image = await probe(`${RAW_GITHUB_URL}${node.relativeDirectory}/${grayMatter.data.image}`);
 
-//     console.log('gatsbyImage:', gatsbyImage);
-//   }
-// };
+    const gatsbyImage = await gatsbyImageResolver(
+      {
+        url: image.url,
+        mimeType: image.mime,
+        width: image.width,
+        height: image.height,
+        filename: `${grayMatter.data.image}-image`
+      },
+      {
+        width: 400,
+        layout: 'constrained',
+        placeholder: 'none',
+        quality: 10
+      }
+    );
+
+    createNode({
+      ...gatsbyImage,
+      id: createNodeId(`${grayMatter.data.image}-image`),
+      parent: null,
+      children: [],
+      internal: {
+        type: 'gatsbyImage',
+        mediaType: 'image/jpeg',
+        contentDigest: createContentDigest(image)
+      }
+    });
+  }
+};
 
 exports.createPages = async ({ graphql, actions: { createPage }, reporter }) => {
   const { data } = await graphql(`
