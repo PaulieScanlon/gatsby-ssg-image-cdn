@@ -2,7 +2,6 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const matter = require('gray-matter');
 
 const probe = require('probe-image-size');
-const { gatsbyImageResolver } = require('gatsby-plugin-utils/dist/polyfill-remote-file/graphql/gatsby-image-resolver');
 
 const {
   polyfillImageServiceDevRoutes,
@@ -21,15 +20,12 @@ exports.createSchemaCustomization = ({ actions, actions: { createTypes }, schema
     `type Frontmatter  {
       date: Date @dateformat(formatString: "DD-MM-YYYY")
       title: String
-      gatsbyImage: RemoteFile
+      remoteFile: MediaAsset @link(from: "image", by: "filename")
     }`,
     addRemoteFilePolyfillInterface(
       schema.buildObjectType({
-        name: 'gatsbyImage',
+        name: 'MediaAsset',
         fields: {
-          layout: 'String',
-          width: 'Int',
-          height: 'Int'
         },
         interfaces: ['Node', 'RemoteFile'],
         extensions: {
@@ -46,8 +42,7 @@ exports.createSchemaCustomization = ({ actions, actions: { createTypes }, schema
 
 exports.onCreateNode = async ({
   node,
-  actions,
-  actions: { createNode, createNodeField },
+  actions: { createNode },
   createNodeId,
   createContentDigest
 }) => {
@@ -55,38 +50,19 @@ exports.onCreateNode = async ({
     const grayMatter = await matter(node.internal.content);
     const image = await probe(`${RAW_GITHUB_URL}${node.relativeDirectory}/${grayMatter.data.image}`);
 
-    const gatsbyImage = await gatsbyImageResolver(
-      {
-        url: image.url,
-        mimeType: image.mime,
-        width: image.width,
-        height: image.height,
-        filename: `${grayMatter.data.image}-image`,
-        internal: {
-          contentDigest: createContentDigest(image)
-        }
-      },
-      {
-        width: 400,
-        layout: 'constrained',
-        placeholder: 'none',
-        quality: 10
-      },
-      actions
-    );
+    createNode({
+      url: image.url,
+      mimeType: image.mime,
+      width: image.width,
+      height: image.height,
+      filename: grayMatter.data.image,
 
-    const gatsbyImageNode = createNode({
-      ...gatsbyImage,
-      id: createNodeId(`${grayMatter.data.image}-image`),
-      parent: node.id,
+      id: createNodeId(image.url),
       children: [],
       internal: {
-        type: 'gatsbyImage',
-        mediaType: 'image/jpeg',
-        contentDigest: createContentDigest(image)
+        type: 'MediaAsset',
+        contentDigest: createContentDigest(String(image.length))
       }
     });
-
-    createNodeField({ node, name: 'gatsbyImage', value: gatsbyImageNode.id });
   }
 };
