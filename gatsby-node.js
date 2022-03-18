@@ -4,7 +4,10 @@ const matter = require('gray-matter');
 const probe = require('probe-image-size');
 const { gatsbyImageResolver } = require('gatsby-plugin-utils/dist/polyfill-remote-file/graphql/gatsby-image-resolver');
 
-const { polyfillImageServiceDevRoutes } = require('gatsby-plugin-utils/polyfill-remote-file');
+const {
+  polyfillImageServiceDevRoutes,
+  addRemoteFilePolyfillInterface
+} = require('gatsby-plugin-utils/polyfill-remote-file');
 
 exports.onCreateDevServer = ({ app }) => {
   polyfillImageServiceDevRoutes(app);
@@ -12,14 +15,33 @@ exports.onCreateDevServer = ({ app }) => {
 
 const RAW_GITHUB_URL = 'https://raw.githubusercontent.com/PaulieScanlon/gatsby-ssg-image-cdn/main/blog/';
 
-exports.createSchemaCustomization = ({ actions: { createTypes, printTypeDefinitions } }) => {
-  createTypes(`
-    type MarkdownRemark implements Node {
-      gatsbyImage: gatsbyImage @link(from: "fields.gatsbyImage")
-    }
-  `);
-
-  // printTypeDefinitions({ path: './typeDefs.txt' });
+exports.createSchemaCustomization = ({ actions, actions: { createTypes }, schema }) => {
+  createTypes([
+    'type MarkdownRemark implements Node { frontmatter: Frontmatter }',
+    `type Frontmatter  {
+      date: Date @dateformat(formatString: "DD-MM-YYYY")
+      title: String
+      gatsbyImage: RemoteFile
+    }`,
+    addRemoteFilePolyfillInterface(
+      schema.buildObjectType({
+        name: 'gatsbyImage',
+        fields: {
+          layout: 'String',
+          width: 'Int',
+          height: 'Int'
+        },
+        interfaces: ['Node', 'RemoteFile'],
+        extensions: {
+          infer: false
+        }
+      }),
+      {
+        schema,
+        actions
+      }
+    )
+  ]);
 };
 
 exports.onCreateNode = async ({

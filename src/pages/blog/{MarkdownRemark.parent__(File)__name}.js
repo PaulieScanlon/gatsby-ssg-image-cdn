@@ -1,21 +1,21 @@
 import React from 'react';
 import { graphql, Link } from 'gatsby';
-// import { GatsbyImage } from 'gatsby-plugin-image';
+import { GatsbyImage } from 'gatsby-plugin-image';
 
 const Page = ({
   data: {
-    gatsbyImage,
+    // gatsbyImage,
     markdownRemark: {
       frontmatter: {
         title,
-        date,
-        image: { publicURL }
+        date
+        // image: { publicURL }
       },
       html
     }
   }
 }) => {
-  console.log('gatsbyImage: ', gatsbyImage);
+  // console.log('gatsbyImage: ', gatsbyImage);
 
   return (
     <main>
@@ -39,12 +39,6 @@ export const pageQuery = graphql`
       frontmatter {
         title
         date(formatString: "MMMM DD, YYYY")
-        image {
-          publicURL
-        }
-      }
-      gatsbyImage {
-        layout
       }
     }
   }
