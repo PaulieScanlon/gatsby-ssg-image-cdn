@@ -1,6 +1,5 @@
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const matter = require('gray-matter');
-
 const probe = require('probe-image-size');
 
 const {
@@ -20,13 +19,12 @@ exports.createSchemaCustomization = ({ actions, actions: { createTypes }, schema
     `type Frontmatter  {
       date: Date @dateformat(formatString: "DD-MM-YYYY")
       title: String
-      remoteFile: MediaAsset @link(from: "image", by: "filename")
+      remoteImage: MediaAsset @link(from: "image", by: "filename")
     }`,
     addRemoteFilePolyfillInterface(
       schema.buildObjectType({
         name: 'MediaAsset',
-        fields: {
-        },
+        fields: {},
         interfaces: ['Node', 'RemoteFile'],
         extensions: {
           infer: false
@@ -40,12 +38,7 @@ exports.createSchemaCustomization = ({ actions, actions: { createTypes }, schema
   ]);
 };
 
-exports.onCreateNode = async ({
-  node,
-  actions: { createNode },
-  createNodeId,
-  createContentDigest
-}) => {
+exports.onCreateNode = async ({ node, actions: { createNode }, createNodeId, createContentDigest }) => {
   if (node.internal.mediaType === 'text/markdown') {
     const grayMatter = await matter(node.internal.content);
     const image = await probe(`${RAW_GITHUB_URL}${node.relativeDirectory}/${grayMatter.data.image}`);
@@ -55,8 +48,8 @@ exports.onCreateNode = async ({
       mimeType: image.mime,
       width: image.width,
       height: image.height,
+      // linking by filename requires each image to have a unique name
       filename: grayMatter.data.image,
-
       id: createNodeId(image.url),
       children: [],
       internal: {
